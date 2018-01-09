@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="ehcache.xsd" updateCheck="true"
+  monitoring="autodetect" dynamicConfig="true">   
+    <diskStore path="java.io.tmpdir"/>
+ 
+ 	<!-- 集群配法
+ 		192.168.86.128
+ 		192.168.86.129
+ 		192.168.86.130
+ 	 <cacheManagerPeerProviderFactory 
+ 		class= "net.sf.ehcache.distribution.RMICacheManagerPeerProviderFactory"  
+        properties="peerDiscovery=manual,rmiUrls=//192.168.86.128:40000/user|//192.168.86.129:40000/user|//192.168.86.130:40000/user" />   -->
+        
+        
+ 	<cacheManagerPeerProviderFactory 
+ 		class= "net.sf.ehcache.distribution.RMICacheManagerPeerProviderFactory"  
+        properties="peerDiscovery=manual,rmiUrls=//127.0.0.1:40000/user" />  
+  
+    <cacheManagerPeerListenerFactory  
+      	class="net.sf.ehcache.distribution.RMICacheManagerPeerListenerFactory"  
+        properties="hostName=127.0.0.1,port=40000, socketTimeoutMillis=120000"/>
+	<!-- 有效的属性是：
+		hostname (可选) – 运行监听器的服务器名称。标明了做为集群群组的成员的地址，同时也是你想要控制的从集群中接收消息的接口。
+		在CacheManager初始化的时候会检查hostname是否可用。如果hostName不可用，CacheManager将拒绝启动并抛出一个连接被拒绝的异常。
+		如果指定，hostname将使用InetAddress.getLocalHost().getHostAddress()来得到。
+		警告：不要将localhost配置为本地地址127.0.0.1，因为它在网络中不可见将会导致不能从远程服务器接收信息从而不能复制。
+		在同一台机器上有多个CacheManager的时候，你应该只用localhost来配置。
+		port – 监听器监听的端口。
+		socketTimeoutMillis (可选) – Socket超时的时间。默认是2000ms。当你socket同步缓存请求地址比较远，不是本地局域网。
+		你可能需要把这个时间配置大些，不然很可能延时导致同步缓存失败。
+    	-->
+    
+    <!-- 
+
+    	配置自定义缓存
+    	maxElementsInMemory：缓存中允许创建的最大对象数
+    	eternal：缓存中对象是否为永久的，如果是，超时设置将被忽略，对象从不过期。
+    	timeToIdleSeconds：缓存数据空闲的最大时间，也就是说如果有一个缓存有多久没有被访问就会被销毁，如果该值是 0 就意味着元素可以停顿无穷长的时间。
+    	timeToLiveSeconds：缓存数据存活的时间，缓存对象最大的的存活时间，超过这个时间就会被销毁，这只能在元素不是永久驻留时有效，如果该值是0就意味着元素可以停顿无穷长的时间。
+    	overflowToDisk：内存不足时，是否启用磁盘缓存。
+    	memoryStoreEvictionPolicy：缓存满了之后的淘汰算法。
+	-->	
+    <defaultCache maxElementsInMemory="10000" 
+    eternal="false" timeToIdleSeconds="30" 
+    timeToLiveSeconds="30" overflowToDisk="false">
+    	<cacheEventListenerFactory  class="net.sf.ehcache.distribution.RMICacheReplicatorFactory"
+    	properties="replicateAsynchronously=true,replicatePuts=true, replicateUpdates=true, 
+    	replicateUpdatesViaCopy=false, replicateRemovals=true "/> 
+    	<!-- 这个工厂支持以下属性：
+		replicatePuts=true | false – 当一个新元素增加到缓存中的时候是否要复制到其他的peers. 默认是true。
+		replicateUpdates=true | false – 当一个已经在缓存中存在的元素被覆盖时是否要进行复制。默认是true。
+		replicateRemovals= true | false – 当元素移除的时候是否进行复制。默认是true。
+		replicateAsynchronously=true | false – 复制方式是异步的（指定为true时）还是同步的（指定为false时）。默认是true。
+		replicatePutsViaCopy=true | false – 当一个新增元素被拷贝到其他的cache中时是否进行复制指定为true时为复制，默认是true。
+		replicateUpdatesViaCopy=true | false – 当一个元素被拷贝到其他的cache中时是否进行复制（指定为true时为复制），默认是true。  -->
+    </defaultCache>
+    
+    <!-- 
+        配置自定义缓存
+        maxElementsInMemory：缓存中允许创建的最大对象数
+        eternal：缓存中对象是否为永久的，如果是，超时设置将被忽略，对象从不过期。
+        timeToIdleSeconds：缓存数据的钝化时间，也就是在一个元素消亡之前，
+                    两次访问时间的最大时间间隔值，这只能在元素不是永久驻留时有效，
+                    如果该值是 0 就意味着元素可以停顿无穷长的时间。
+        timeToLiveSeconds：缓存数据的生存时间，也就是一个元素从构建到消亡的最大时间间隔值，
+                    这只能在元素不是永久驻留时有效，如果该值是0就意味着元素可以停顿无穷长的时间。
+        overflowToDisk：内存不足时，是否启用磁盘缓存。
+        memoryStoreEvictionPolicy：缓存满了之后的淘汰算法。
+   		
+   		
+   		timeToLiveSeconds和timeToIdleSeconds
+		timeToLiveSeconds=x：缓存自创建日期起至失效时的间隔时间x；
+		timeToIdleSeconds=y：缓存创建以后，最后一次访问缓存的日期至失效之时的时间间隔y；
+
+		如果仅有timeToLiveSeconds那么自创建时间开始 间隔x后缓存失效；
+		如果没有timeToLiveSeconds那么自最后一次访问缓存 间隔y后 缓存失效；
+		如果既有timeToLiveSeconds也有timeToIdleSeconds那么取最小数算作间隔时间；min(x,y);
+		经过测试其计算原则是：
+		若自创建缓存后一直都没有访问缓存，那么间隔x后失效，若自创建缓存后有N次访问缓存，那么计算(最后一次访问缓存时间+y ) 即：按照timeToIdleSeconds计算，但总存活时间不超过 y;
+
+		举例：
+		timeToIdleSeconds=120；
+		timeToLiveSeconds=180；
+		表示此缓存最多可以存活3分钟，如果期间超过2分钟未访问 那么此缓存失效
+		
+		
+		ehcache使用了LinkedHashMap来存放Element。jdk要1.5以上。Ehcache1.5可以使用jdk1.4 
+		如果在添加Elemtent时，缓存中的Element个数达到了最大缓存数并且overflowToDisk配置的属性为true，
+		Ehcache会更具配置项MemoryStoreEvictionPolicy的失效策略将Element输出到磁盘。如果overflowToDisk为fasle，
+		Ehcache将删除内存中Element 
+		
+		值得注意的是缓存中失效的Element并不会别马上清理掉，所以想得到内存的真实大小应该调用方法calculateInMemorySize()方法
+    -->
+    <cache name="userCache" 
+        maxElementsInMemory="10000" 
+        eternal="false"
+        overflowToDisk="false" 
+        timeToIdleSeconds="30" 
+        timeToLiveSeconds="30"
+        memoryStoreEvictionPolicy="LFU" >
+        	<cacheEventListenerFactory  class="net.sf.ehcache.distribution.RMICacheReplicatorFactory"/> 
+        </cache>
+</ehcache>  

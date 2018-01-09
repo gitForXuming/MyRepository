@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:mvc="http://www.springframework.org/schema/mvc"
+	   xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+    
+     <!-- 默认扫描的包路径  且只扫描 controller 一定要把 service给剔除掉 不然service进入不了事物-->  
+    <context:component-scan base-package="com" >
+    	<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    	<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Service"/>
+    </context:component-scan> 
+    
+	<bean class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping"/>   
+	    
+	<!-- HandlerAdapter -->
+
+	<bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter"/>  
+	
+	<!-- HandlerMapping -->
+	<bean class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping"/>
+	 
+	<!-- HandlerAdapter -->
+	<bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter"/> 
+	
+	<!-- ViewResolver -->
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		  <property name="prefix" value="/jsp/" />
+		  <property name="suffix" value=".jsp"></property>
+		  <property name="order" value="1"></property>
+	</bean> 
+	
+	<!-- beanName普通方式 -->
+	<bean name="/hello" class="com.test.HelloController"/>
+	
+	<!-- beanName普通方式 -->
+	<bean name="/index" class="com.controller.IndexController"/>
+	<bean name="/grabController" class="com.controller.GrabController"/>
+	
+	<!-- URL方式 -->
+	<bean id="urlController" name="/url" class="com.test.UrlController"></bean>
+	
+	<bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+		<property name="mappings">
+			<props>
+				<prop key="/urlMapping">urlController</prop>
+			</props>
+		</property>
+	</bean>
+	
+	<!-- 通过类名小写方式访问 -->  
+	<bean class="org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping"></bean>
+	<bean name="/className" class="com.test.ClassNameLowerController"></bean>
+	
+
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/*/*"/>
+			<bean class="com.interceptor.SessionInterceptor">
+				<property name="allUrls">
+					<list>
+						<value>/user/ajaxQuery</value>
+						<value>/user/addsubmit</value>
+						<value>/user/ajaxPut</value>
+					</list>
+				</property>
+			</bean>
+		</mvc:interceptor>
+	</mvc:interceptors>
+	
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basenames" value="com.test.resource.Message"></property>
+	</bean>
+
+	<!-- 加载静态页面-->
+	<mvc:default-servlet-handler/>
+
+	<!--处理ajax支持json 详细说明：https://www.cnblogs.com/dreamroute/p/4493346.html-->
+	<mvc:annotation-driven >
+		<mvc:message-converters>
+			<bean class="org.springframework.http.converter.StringHttpMessageConverter">
+				<property name="supportedMediaTypes">
+					<list>
+						<value>application/json;charset=UTF-8</value>
+					</list>
+				</property>
+			</bean>
+		</mvc:message-converters>
+	</mvc:annotation-driven >
+
+</beans>

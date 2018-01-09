@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+     http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+     http://www.springframework.org/schema/rabbit
+     http://www.springframework.org/schema/rabbit/spring-rabbit-1.0.xsd">
+     
+     
+	<!--配置connection-factory，指定连接rabbit server参数 -->
+	<rabbit:connection-factory id="connectionFactory"
+		username="guest" password="guest" host="127.0.0.1" port="5672"  />
+	
+
+	<!--通过指定下面的admin信息，当前producer中的exchange和queue会在rabbitmq服务器上自动生成 -->
+	<rabbit:admin connection-factory="connectionFactory" />
+		
+	<!--定义rabbit template用于数据的接收和发送 -->
+	<rabbit:template id="amqpTemplate"  connection-factory="connectionFactory" reply-timeout="1000" 
+	    exchange="exchangeTest" channel-transacted="true"/>
+	    
+	<!-- <rabbit:template id="rabbitTemplate"  connection-factory="connectionFactory" reply-timeout="1000" 
+	    exchange="exchangeTest" channel-transacted="true"/>     -->
+	<!-- reply-timeout:答复超时时间   rabbitTemplate:此模板消息可以设置是否需要消息确认 如果是channel-transacted:要为true-->
+	
+	<!-- 定义多个队列 -->
+	<!--定义queueOne -->
+	<rabbit:queue name="queueOne" durable="true" auto-delete="false" exclusive="false" >
+		<!-- <rabbit:queue-arguments>  
+            <entry key="x-message-ttl">  
+                <value type="java.lang.Long">86400000</value>  消息超时时间  单位：毫秒
+            </entry>  
+            <entry key="x-max-length">  
+                <value type="java.lang.Long">100</value>  消息长度
+            </entry>  
+        </rabbit:queue-arguments>   -->
+	</rabbit:queue>
+	<!--定义queueTwo -->
+	<rabbit:queue name="queueTwo" durable="true" auto-delete="false" exclusive="false" />
+	<!--定义queueTwo -->
+	<rabbit:queue name="queueThree" durable="true" auto-delete="false" exclusive="false" />
+	<!-- durable:是否持久化 exclusive: 仅创建者可以使用的私有队列，断开后自动删除 auto_delete: 当所有消费客户端连接断开后，是否自动删除队列 -->
+	
+	
+	<!-- 定义direct exchange，绑定queueOne -->
+	<rabbit:direct-exchange name="exchangeTest" durable="true" auto-delete="false">
+		<rabbit:bindings>
+			<rabbit:binding queue="queueOne" key="queueOneKey"></rabbit:binding>
+			<rabbit:binding queue="queueTwo" key="queueTwoKey"></rabbit:binding>
+		</rabbit:bindings>
+	</rabbit:direct-exchange>
+	
+	<!-- 定义direct exchange，绑定queueOne -->
+	<rabbit:direct-exchange name="exchangeTwo" durable="true" auto-delete="false">
+		<rabbit:bindings>
+			<rabbit:binding queue="queueThree" key="queueThreeKey"></rabbit:binding>
+		</rabbit:bindings>
+		<!-- rabbit:direct-exchange：定义exchange模式为direct，意思就是消息与一个特定的路由键完全匹配，才会转发。
+		rabbit:binding：设置消息queue匹配的key -->
+	</rabbit:direct-exchange>
+	
+	<!-- 消息接收者 -->
+	<bean id="messageReceiver" class="com.rabbitMQ.MessageConsumer"></bean>
+	
+	   <!-- 配置线程池 -->  
+	<bean id ="taskExecutor"  class ="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor" >  
+    	<!-- 线程池维护线程的最少数量 -->  
+		<property name ="corePoolSize" value ="5" />  
+    	<!-- 线程池维护线程所允许的空闲时间 -->  
+		<property name ="keepAliveSeconds" value ="30000" />  
+    	<!-- 线程池维护线程的最大数量 -->  
+		<property name ="maxPoolSize" value ="1000" />  
+    	<!-- 线程池所使用的缓冲队列 -->  
+		<property name ="queueCapacity" value ="200" />  
+	</bean>  
+ 
+	
+	<!-- queue litener  观察 监听模式 当有消息到达时会通知监听在对应的队列上的监听对象-->
+    <rabbit:listener-container connection-factory="connectionFactory" acknowledge="manual" task-executor="taskExecutor" >
+    
+    	<!-- acknowledge="manual" 回复模式：atuo 自动回复 ，manual 不自动回复 那么listener 需要继承：ChannelAwareMessageListener-->
+             <rabbit:listener queues="queueOne,queueTwo" ref="messageReceiver"/>
+		<!-- queues：监听的队列，多个的话用逗号（,）分隔 -->
+    </rabbit:listener-container>
+</beans>

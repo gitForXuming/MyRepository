@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.db.UserDao"><!-- 此处的namespace必须和要注入的dao类名相似 -->
+	<!-- 开启缓存 -->  
+  	<cache />  
+	<!-- 添加一条记录 -->
+	<insert id="addUser" parameterType="com.model.VO.UserInfoVO">
+    		insert  into userinfo (T_USERNAME,
+    				T_PASSWORD
+    				) 
+    				values(#{username},
+    				#{password}
+    				)
+    	</insert>
+</mapper>

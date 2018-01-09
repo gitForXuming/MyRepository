@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.db.UserDao"><!-- 此处的namespace必须和要注入的dao类名相似 -->
+	<!-- 查询记录 -->
+	<select id="queryUsers" parameterType="com.model.VO.UserInfoVO" resultType="com.model.VO.UserInfoVO">
+		select t_username as username , t_password as password from userinfo where t_username = #{username}
+	</select>
+</mapper>
