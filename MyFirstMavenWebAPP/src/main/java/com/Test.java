@@ -15,7 +15,7 @@ import java.util.Set;
 public class Test {
 	public volatile boolean flag =true;
 	public static void main(String[] args) {
-		//version 4
+		//version 5
 		String hc = "ab";
 		System.out.println(hc.hashCode());
 		Set set = new HashSet();
