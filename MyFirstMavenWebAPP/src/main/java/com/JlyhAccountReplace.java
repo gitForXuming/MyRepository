@@ -15,6 +15,7 @@ public class JlyhAccountReplace {
 		BufferedReader br=null;
 		BufferedOutputStream bos =null;
 		try{
+			/version 1
 			File file = new File("C:\\Users\\lenovo\\Desktop\\sgb_xjzh_13031_20171216\\sgb_xjzh_806.unl");
 			FileInputStream fis = new FileInputStream(file);
 			br = new BufferedReader(new InputStreamReader(fis,"UTF-8"));
